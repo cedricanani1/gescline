@@ -11,5 +11,5 @@ class DossierConstante extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['dossier_id','constante_id','value','created_by'];
+    protected $fillable = ['dossier_id','constante_id','value','created_by','heure'];
 }

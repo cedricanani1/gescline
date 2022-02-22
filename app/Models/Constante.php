@@ -11,5 +11,5 @@ class Constante extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['libelle'];
+    protected $fillable = ['libelle','type','required','description'];
 }

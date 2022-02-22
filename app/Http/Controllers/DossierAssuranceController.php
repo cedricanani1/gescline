@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DossierAssurance;
+use App\Models\WorkTime;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class DossierAssuranceController extends Controller
@@ -40,6 +42,7 @@ class DossierAssuranceController extends Controller
             $data['matricule'] = $request['matricule'];
             $data['acte'] = $request['acte'];
             $data['created_by'] = $created_by;
+
 
             $status = DossierAssurance::create($data);
 

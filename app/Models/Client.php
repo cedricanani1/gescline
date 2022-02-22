@@ -11,9 +11,8 @@ class Client extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['nom','prenoms','sexe','date_naissance','nationalite','ethnie','lieu_naissance','residence_ville','quartier','email','contacts_fixe','matricule',
+    protected $fillable = ['nom','prenoms','sexe','date_naissance','nationalite','photo','ethnie','lieu_naissance','residence_ville','quartier','email','contacts_fixe','matricule',
                             'contacts_cel','assurance','nom_assurance','profession','formation','etat_professionnel','instruction','niveau_instruction','status_matrimonial'];
-
     public function dossiers()
     {
         return $this->hasMany('App\Models\DossierClient','client_id')->orderBy('created_at','desc');

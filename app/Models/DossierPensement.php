@@ -11,5 +11,10 @@ class DossierPensement extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['dossier_id','medicament_id','created_by','purchased'];
+    protected $fillable = ['dossier_id','medicament_id','created_by','purchased','assurance'];
+
+    public function medicaments()
+    {
+        return $this->belongsToMany('App\Models\Medicament','dossier_pensements','dossier_id', 'medicament_id')->withPivot('purchased','assurance');
+    }
 }

@@ -37,11 +37,11 @@ class DroitsUserController extends Controller
 
         if ($status) {
             return response()->json([
-                'state'=> 'true',
+                'state'=> true,
             ]);
         }else{
             return response()->json([
-                'state'=> 'false',
+                'state'=> false,
             ]);
         }
 

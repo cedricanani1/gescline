@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ServicesController extends Controller
 {
-    //
     public function creationService(Request $request){
 
         Auth::guard('api')->user();
@@ -21,7 +20,7 @@ class ServicesController extends Controller
 
         ]);
 
-        $nom = ucwords($request->nom) ;
+        $nom = ucwords($request->nom);
         $description = $request->description;
 
         $service = new Service();

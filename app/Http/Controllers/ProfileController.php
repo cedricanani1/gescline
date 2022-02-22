@@ -64,6 +64,46 @@ class ProfileController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        $profiles = Profile::findOrFail($id);
+
+        if($profiles){
+            return response()->json([
+                'state'=> true,
+                'data' =>  $profiles]);
+        }
+        else{
+            return response()->json([
+                'state'=> false,
+                'message' =>  'Aucun profile correspondant']);
+        }
+    }
+    public function edit(Request $request, $id)
+    {
+        Auth::guard('api')->user();
+        $request->validate([
+            'titre' => 'required',
+            'description' =>  'required',
+        ]);
+        $profil =  Profile::findOrFail($id);
+        $profil->description = $request->description;
+        $profil->titre = Str::lower($request->titre);
+        $profil->save();
+
+        if($profil){
+            return response()->json([
+                'state'=> true
+            ]);
+        }
+        else{
+            return response()->json([
+                'state'=> false
+            ]);
+        }
+    }
+
+
     public function activerDesactiverProfile(Request $request)
     {
         Auth::guard('api')->user();
@@ -94,5 +134,20 @@ class ProfileController extends Controller
                 'message' => 'Opération échouée, réessayer.']);
         }
 
+    }
+
+    public function delete($id){
+        $Profile = Profile::find($id);
+
+        $Profile->delete();
+        if ($Profile) {
+            return response()->json([
+                'state'=> true,
+            ]);
+        } else {
+            return response()->json([
+                'state'=> false,
+            ]);
+        }
     }
 }

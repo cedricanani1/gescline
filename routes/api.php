@@ -27,11 +27,13 @@ use App\Http\Controllers\DossierConstanteController;
 use App\Http\Controllers\DossierPensementController;
 use App\Http\Controllers\DossierExamenController;
 use App\Http\Controllers\DossierAssuranceController;
+use App\Http\Controllers\DossierConsultationController;
 use App\Http\Controllers\DossierDiagnosticController;
 use App\Http\Controllers\DossierOrdonnanceController;
 use App\Http\Controllers\DossierRendezVousController;
 use App\Http\Controllers\FileAttenteController;
 use App\Http\Controllers\FactureController;
+use App\Http\Controllers\WorkTimeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +49,7 @@ use App\Http\Controllers\FactureController;
 
 Route::get('ping', [Ping::class,'connexion']);
 Route::post('connexion', [CompteUtilisateur::class,'connexion']);
-
+Route::get('listAssurances', [AssuranceController::class, 'listAssurances']);
 
 Route::middleware('auth:api')->group(function(){
 
@@ -98,14 +100,12 @@ Route::middleware('auth:api')->group(function(){
    Route::patch('modifierAnalyse/{id}', [AnalyseController::class, 'modifierAnalyse']);
    Route::post('activerDesactiverAnalyse', [AnalyseController::class, 'activerDesactiverAnalyse']);
 
-
    Route::post('creationAssurance', [AssuranceController::class, 'creationAssurance']);
-   Route::get('listAssurances', [AssuranceController::class, 'listAssurances']);
+
    Route::get('listAssurancesEmpty/{clinique_id}', [AssuranceController::class, 'listAssurancesEmpty']);
    Route::get('assurance/{id}', [AssuranceController::class, 'assurance']);
    Route::patch('modifierAssurance/{id}', [AssuranceController::class, 'modifierAssurance']);
    Route::post('activerDesactiverAssurance', [AssuranceController::class, 'activerDesactiverAssurance']);
-
 
    Route::post('attribuerDepartementsClinique', [Attribution::class, 'departementsClinique']);
    Route::post('attribuerServicesDepartement/{id}', [Attribution::class, 'servicesDepartement']);
@@ -120,10 +120,14 @@ Route::middleware('auth:api')->group(function(){
    Route::post('createWorkflow', [WorkflowController::class, 'createWorkflow']);
    Route::get('getWorkflow/{clinique}', [WorkflowController::class, 'getWorkflow']);
    Route::post('deleteWorkflow', [WorkflowController::class, 'deleteWorkflow']);
+   Route::get('getWorkflowService', [WorkflowController::class, 'getWorkflowService']);
 
    Route::post('createProfile', [ProfileController::class, 'createProfile']);
    Route::get('getListeProfile', [ProfileController::class, 'getListeProfile']);
+   Route::get('profil/{id}', [ProfileController::class, 'show']);
+   Route::put('profil/{id}', [ProfileController::class, 'edit']);
    Route::post('activerDesactiverProfile', [ProfileController::class, 'activerDesactiverProfile']);
+   Route::delete('deleteProfil/{id}', [ProfileController::class, 'delete']);
 
 
 
@@ -138,6 +142,7 @@ Route::middleware('auth:api')->group(function(){
    Route::put('patient/{id}', [ClientController::class, 'update']);
    Route::delete('patient/{id}', [ClientController::class, 'delete']);
    Route::post('ajouterNouveauDossier', [DossierClientController::class, 'store']);
+   Route::get('dossiersByClient/{id}', [DossierClientController::class, 'listeDossiersByClient']);
 
    // ROUTE CATEGORIE DE MEDICAMENT
 
@@ -179,6 +184,7 @@ Route::middleware('auth:api')->group(function(){
    Route::put('constante/{id}', [ConstanteController::class, 'update']);
    Route::delete('constante/{id}', [ConstanteController::class, 'delete']);
 
+
     // ROUTE TRAITEMENT URGENCE
 
    Route::post('ajouterTraitementUrgence', [TraitementController::class, 'store']);
@@ -194,6 +200,8 @@ Route::middleware('auth:api')->group(function(){
    Route::get('traitementDossier/{id}', [DossierTraitementController::class, 'show']);
    Route::put('traitementDossier/{id}', [DossierTraitementController::class, 'update']);
    Route::delete('traitementDossier/{id}', [DossierTraitementController::class, 'delete']);
+   Route::get('traitementsByDossier/{id}', [DossierTraitementController::class, 'traitementsByDossier']);
+
 
     // ROUTE DOSSIER CONSTANTE
 
@@ -202,6 +210,7 @@ Route::middleware('auth:api')->group(function(){
     Route::get('constanteDossier/{id}', [DossierConstanteController::class, 'show']);
     Route::put('constanteDossier/{id}', [DossierConstanteController::class, 'update']);
     Route::delete('constanteDossier/{id}', [DossierConstanteController::class, 'delete']);
+    Route::get('constantesByDossier/{id}', [DossierConstanteController::class, 'constantesByDossier']);
 
     // ROUTE DOSSIER PENSEMENT
 
@@ -210,6 +219,8 @@ Route::middleware('auth:api')->group(function(){
     Route::get('pensementDossier/{id}', [DossierPensementController::class, 'show']);
     Route::put('pensementDossier/{id}', [DossierPensementController::class, 'update']);
     Route::delete('pensementDossier/{id}', [DossierPensementController::class, 'delete']);
+    Route::get('pensementsByDossier/{id}',[DossierPensementController::class, 'pensementByDossier']);
+    Route::post('payerPensement', [DossierPensementController::class, 'caisse']);
 
     // ROUTE DOSSIER EXAMEN
 
@@ -217,15 +228,19 @@ Route::middleware('auth:api')->group(function(){
     Route::get('listeExamenDossiers', [DossierExamenController::class, 'index']);
     Route::get('examenDossier/{id}', [DossierExamenController::class, 'show']);
     Route::post('modifierExamenDossier', [DossierExamenController::class, 'update']);
+    Route::post('transfererDossier', [DossierExamenController::class, 'transferer']);
+    Route::post('payerExamen', [DossierExamenController::class, 'caisse']);
+    Route::get('listeExamenByDossier/{id}', [DossierClientController::class, 'listeExamenByDossier']);
     Route::delete('deleteExamenDossier/{id}', [DossierExamenController::class, 'delete']);
 
-    // ROUTE DOSSIER EXAMEN
+    // ROUTE DOSSIER Assurance
 
     Route::post('ajouterAssuranceDossier', [DossierAssuranceController::class, 'store']);
     Route::get('listeAssuranceDossiers', [DossierAssuranceController::class, 'index']);
     Route::get('AssuranceDossier/{id}', [DossierAssuranceController::class, 'show']);
     Route::post('modifierAssuranceDossier/{id}', [DossierAssuranceController::class, 'update']);
     Route::delete('deleteAssuranceDossier/{id}', [DossierAssuranceController::class, 'destroy']);
+
 
     // ROUTE DOSSIER DIAGNOSTIC
 
@@ -242,6 +257,7 @@ Route::middleware('auth:api')->group(function(){
     Route::get('ordonnanceDossier/{id}', [DossierOrdonnanceController::class, 'show']);
     Route::put('modifierOrdonnanceDossier/{id}', [DossierOrdonnanceController::class, 'update']);
     Route::delete('deleteOrdonnanceDossier/{id}', [DossierOrdonnanceController::class, 'delete']);
+    Route::post('payerMedoc', [DossierOrdonnanceController::class, 'caisse']);
 
     // ROUTE DOSSIER RENDEZ VOUS
 
@@ -254,23 +270,32 @@ Route::middleware('auth:api')->group(function(){
     // ROUTE DOSSIER FILE D'ATTENTE
 
     Route::get('listeFileAttentes', [FileAttenteController::class, 'index']);
-    Route::get('fileAttente/{id}', [FileAttenteController::class, 'show']);
+    Route::get('getFile', [FileAttenteController::class, 'getFileByProjet']);
     Route::put('modifierFileAttente/{id}', [FileAttenteController::class, 'update']);
     Route::delete('deleteFileAttente/{id}', [FileAttenteController::class, 'delete']);
 
     // ROUTE DOSSIER FACTURE
 
     Route::get('getDossierFacture/{id}', [FactureController::class, 'show']);
+    Route::post('solderFacture', [FactureController::class, 'caisse']);
+
+    // ROUTE AUTRE PASSAGE
+
+    Route::post('payerConsultation', [DossierConsultationController::class, 'caisse']);
+
+    // Temps de travail
+
+
 
 });
-
-
+Route::post('worktime-patient', [WorkTimeController::class, 'arrivePatient']);
+Route::post('worktime', [WorkTimeController::class, 'store']);
+Route::post('worktime-transfert', [WorkTimeController::class, 'transfert']);
+Route::post('worktime-update', [WorkTimeController::class, 'update']);
+Route::post('worktime-user', [WorkTimeController::class, 'show']);
+Route::get('worktime-all', [WorkTimeController::class, 'index']);
 /*
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 */
-
-
-
-

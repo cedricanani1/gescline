@@ -10,5 +10,5 @@ class DossierAssurance extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['dossier_id','assurance_id','numero_bon','matricule','acte','created_by'];
+    protected $fillable = ['dossier_id','assurance_id','numero_bon','matricule','acte','created_by','pourcentage'];
 }

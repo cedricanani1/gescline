@@ -20,6 +20,7 @@ class CreateFileAttentesTable extends Migration
             $table->unsignedInteger('profile_id')->references('id')->on('profiles')->onDelete('restrict')->onUpdate('cascade');
             $table->enum('status',['en attente','en cours','termine'])->default('en attente');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

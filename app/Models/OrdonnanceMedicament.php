@@ -11,5 +11,5 @@ class OrdonnanceMedicament extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['ordonnance_id','medicament_id','posologie'];
+    protected $fillable = ['ordonnance_id','medicament_id','posologie','medicament_name','quantity'];
 }

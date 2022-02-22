@@ -12,4 +12,9 @@ class Medicament extends Model
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
     protected $fillable = ['categorie_medicament_id','libelle','dosage','type','prix','quantity'];
+
+    public function categorie()
+    {
+        return $this->belongsTo('App\Models\CategorieMedicament','categorie_medicament_id');
+    }
 }

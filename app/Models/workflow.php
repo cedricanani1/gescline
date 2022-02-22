@@ -11,4 +11,9 @@ class workflow extends Model
     use HasFactory, LogsActivity;
     protected static $logAttributes = ['*'];
     protected $fillable = ['source_service_id','destination_service_id','clinique_id','commentaire'];
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class,'destination_service_id');
+    }
 }

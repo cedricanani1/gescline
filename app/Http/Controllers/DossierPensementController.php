@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DossierClient;
 use Illuminate\Http\Request;
 use App\Models\DossierPensement;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,12 @@ class DossierPensementController extends Controller
         $DossierPensement = DossierPensement::findOrFail($id);
         return response()->json($DossierPensement);
     }
+
+    public function pensementByDossier($id)
+    {
+        $DossierPensement = DossierClient::with('pensements')->findOrFail($id);
+        return response()->json($DossierPensement);
+    }
     public function update(Request $request, $id)
     {
         $created_by = Auth::guard('api')->user()->id;
@@ -52,7 +59,7 @@ class DossierPensementController extends Controller
             'purchased' => 'boolean|required',
         ]);
             $data['dossier_id'] = $request['dossier_id'];
-            $data['medicament_id'] = $request['constante_id'];
+            $data['medicament_id'] = $request['medicament_id'];
             $data['purchased'] = $request['purchased'];
             $data['created_by'] = $created_by;
 
@@ -70,6 +77,27 @@ class DossierPensementController extends Controller
         }
     }
 
+    public function caisse(Request $request)
+    {
+        $created_by = Auth::guard('api')->user()->id;
+        $request->validate([
+            'dossier_id' => 'integer|required',
+        ]);
+            $DossierExamen = DossierPensement::where('dossier_id',$request['dossier_id'])->where('medicament_id',$request['medicament_id'])->first();
+
+            $DossierExamen->purchased = $request['purchased'];
+            $status = $DossierExamen->save();
+
+        if ($status) {
+            return response()->json([
+                'state'=> true,
+            ]);
+        }else{
+            return response()->json([
+                'state'=> false,
+            ]);
+        }
+    }
     public function delete($id){
 
         $DossierPensement = DossierPensement::find($id);

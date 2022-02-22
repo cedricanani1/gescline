@@ -9,7 +9,7 @@ class MedicamentController extends Controller
 {
     public function index()
     {
-        $Medicament = Medicament::all();
+        $Medicament = Medicament::with('categorie')->get();
         return response()->json($Medicament);
     }
     public function store(Request $request)
@@ -33,11 +33,11 @@ class MedicamentController extends Controller
 
             if ($status) {
                 return response()->json([
-                    'state'=> 'true',
+                    'state'=> true,
                 ]);
             }else{
                 return response()->json([
-                    'state'=> 'false',
+                    'state'=> false,
                 ]);
             }
 
@@ -70,11 +70,11 @@ class MedicamentController extends Controller
 
         if ($status) {
             return response()->json([
-                'state'=> 'true',
+                'state'=> true,
             ]);
         }else{
             return response()->json([
-                'state'=> 'false',
+                'state'=> false,
             ]);
         }
     }
@@ -85,7 +85,7 @@ class MedicamentController extends Controller
         $Medicament->delete();
 
         return response()->json([
-            'state'=> 'true',
+            'state'=> true,
         ]);
     }
 }

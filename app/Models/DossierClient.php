@@ -11,18 +11,22 @@ class DossierClient extends Model
 {
     use HasFactory,SoftDeletes,LogsActivity;
     protected static $logAttributes = ['*'];
-    protected $fillable = ['client_id','num','objet','created_by'];
+    protected $fillable = ['client_id','num','objet','created_by','debt','raison'];
     public function constantes()
     {
-        return $this->belongsToMany('App\Models\Constante','dossier_constantes', 'dossier_id', 'constante_id')->withPivot('value','created_by');
+        return $this->belongsToMany('App\Models\Constante','dossier_constantes', 'dossier_id', 'constante_id')->withPivot('value','created_by','heure');
+    }
+    public function consultation()
+    {
+        return $this->belongsToMany('App\Models\Consultation','dossier_consultations', 'dossier_id', 'consultation_id')->withPivot('purchased','created_by','assurance');
     }
     public function pensements()
     {
-        return $this->belongsToMany('App\Models\Medicament','dossier_pensements', 'dossier_id', 'medicament_id')->withPivot('purchased','created_by');
+        return $this->belongsToMany('App\Models\Medicament','dossier_pensements', 'dossier_id', 'medicament_id')->withPivot('purchased','created_by','assurance');
     }
     public function examens()
     {
-        return $this->belongsToMany('App\Models\Examen','dossier_examens', 'dossier_id', 'examen_id')->withPivot('purchased','created_by','resultat');
+        return $this->belongsToMany('App\Models\Examen','dossier_examens', 'dossier_id', 'examen_id')->withPivot('purchased','created_by','resultat','id','assurance');
     }
     public function traitements()
     {
@@ -30,7 +34,7 @@ class DossierClient extends Model
     }
     public function assurance()
     {
-        return $this->belongsToMany('App\Models\Assurance','dossier_assurances','dossier_id', 'assurance_id')->withPivot('numero_bon','matricule','acte','created_by');
+        return $this->belongsToMany('App\Models\Assurance','dossier_assurances','dossier_id', 'assurance_id')->withPivot('numero_bon','matricule','acte','created_by','pourcentage');
     }
     public function diagnostics()
     {
@@ -44,8 +48,16 @@ class DossierClient extends Model
     {
         return $this->hasOne('App\Models\DossierRendezVous','dossier_id');
     }
+    public function client()
+    {
+        return $this->belongsTo('App\Models\Client');
+    }
     public function fileAttente()
     {
         return $this->hasOne('App\Models\FileAttente','dossier_id');
+    }
+    public function factures()
+    {
+        return $this->hasMany('App\Models\Facture','dossier_id');
     }
 }

@@ -15,17 +15,17 @@ class AssuranceController extends Controller
 
          $request->validate([
             'nom' => 'String|required',
-            'entreprise' => 'String|required'
+            'entreprise' => 'String|required',
+            'pourcentage' => 'integer|required'
 
         ]);
 
         $nom = strtoupper($request->nom) ;
         $entreprise = strtoupper($request->entreprise) ;
-
         $assurance = new Assurance();
-
         $assurance->nom = $nom;
         $assurance->entreprise = $entreprise;
+        // $assurance->pourcentage = $request->pourcentage;
 
 
         $enregistrement = $assurance->save();
@@ -47,8 +47,13 @@ class AssuranceController extends Controller
     public function listAssurances(){
         Auth::guard('api')->user();
 
-        $assurances = Assurance::all();
-
+        $assurances = Assurance::with('dossiers')->get();
+        foreach ($assurances as $key => $assurance) {
+            foreach ($assurance->dossiers as $key => $dossier) {
+                $dossier->client;
+                $dossier->factures;
+            }
+        }
         if(!$assurances->isEmpty()){
             return response()->json([
                 'state'=> true,
@@ -112,7 +117,8 @@ class AssuranceController extends Controller
 
         $data = [
             'nom' =>  $nom,
-            'entreprise' => $entreprise
+            'entreprise' => $entreprise,
+            'pourcentage' => $request->pourcentage
         ];
 
         $statut = $assurance->fill($data)->save();

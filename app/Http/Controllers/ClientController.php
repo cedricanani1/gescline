@@ -7,14 +7,25 @@ use App\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DossierAssurance;
 use App\Models\DossierClient;
+use App\Models\DossierConsultation;
+use App\Models\Facture;
 use App\Models\FileAttente;
+use App\Models\workflow;
+use App\Models\WorkTime;
+use Carbon\Carbon;
 
 class ClientController extends Controller
 {
     public function index()
     {
-        $client = Client::all();
-        return response()->json($client);
+        $clients = Client::with('dossiers')->orderBy('created_at','DESC')->get();
+        foreach ($clients as $key => $client) {
+            foreach ($client->dossiers as $key => $value) {
+                $value->assurance;
+            }
+
+        }
+        return response()->json($clients);
     }
     public function store(Request $request)
     {
@@ -27,21 +38,28 @@ class ClientController extends Controller
             'date_naissance' => 'string|required',
             'nationalite' => 'string|required',
             'ethnie' => 'string|nullable',
-            'lieu_naissance' => 'string|required',
-            'residence_ville' => 'string|required',
-            'quartier' => 'string|required',
+            'lieu_naissance' => 'string|nullable',
+            'residence_ville' => 'string|nullable',
+            'quartier' => 'string|nullable',
             'contacts_fixe' => 'string|nullable',
-            'contacts_cel' => 'string|required',
+            'contacts_cel' => 'string|required|unique:clients',
+            'email' => 'string|unique:clients',
             'assurance' => 'boolean|required',
             'nom_assurance' => 'string|nullable',
             'profession' => 'string|nullable',
             'formation' => 'string|nullable',
-            'etat_professionnel' => 'string|required',
-            'instruction' => 'string|required',
-            'status_matrimonial' => 'string|required',
-
+            'etat_professionnel' => 'string|nullable',
+            'instruction' => 'string|nullable',
+            'status_matrimonial' => 'string|nullable',
         ]);
-            $num= mt_rand(0000000, 1000000000);
+             $worktimes = WorkTime::where('code',$request->code)->first();
+            if (!$worktimes) {
+                return response()->json([
+                    'state'=> false,
+                    'message' => 'code invalide'
+                ]);
+            }
+            $num= Carbon::now()->isoFormat('YMMDDHmmSSS');
             $data['matricule']='PAT'.$num;
             $data['nom']=$request['nom'];
             $data['prenoms'] = $request['prenoms'];
@@ -62,15 +80,21 @@ class ClientController extends Controller
             $data['etat_professionnel']= $request['etat_professionnel'];
             $data['instruction'] = $request['instruction'];
             $data['status_matrimonial'] = $request['status_matrimonial'];
+            if (request()->hasFile('photo')) {
+                $file = $request->file('photo');
+                $fileName= $request['photo']->getClientOriginalName();
+                $data['photo'] = $file->storeAs('Clients', $fileName);
+            }
 
-            $status = Client::create($data);
+            $client = Client::create($data);
 
-            $dossier['client_id'] = $status->id;
+            $dossier['client_id'] = $client->id;
             $dossier['num'] = 'DOS'.$num;
             $dossier['objet']= $request['objet'];
             $dossier['created_by'] = $created_by;
-
+            
             $dossier = DossierClient::create($dossier);
+
 
             if ((boolean) $request['assurance']) {
                 $assur['dossier_id'] = $dossier->id;
@@ -78,25 +102,51 @@ class ClientController extends Controller
                 $assur['numero_bon'] = $request['numero_bon'];
                 $assur['matricule'] = $request['matricule'];
                 $assur['acte'] = $request['acte'];
+                $assur['pourcentage'] = $request['pourcentage'];
                 $assur['created_by'] = $created_by;
                 $status = DossierAssurance::create($assur);
             }
-                $fifo = FileAttente::all();
 
-                $file['dossier_id'] = $dossier->id;
-                $file['num_ordre'] ='00'.count($fifo)+1;
-                $file['profile_id'] = Auth::guard('api')->user()->profile->last()->id;
-                $file['status'] = 'en attente';
+                $consul['consultation_id'] = 1;
+                $consul['dossier_id'] = $dossier->id;
+                $consul['created_by'] = $created_by;
 
-            $file = FileAttente::create($file);
+                $consultation = DossierConsultation::create($consul);
+
+                if ($consultation) {
+                    $num= Carbon::now()->format('YmdHi');
+                    $data['num_facture'] = $num;
+                    $data['dossier_id']=$dossier->id;
+                    $data['sold']=0;
+                    $status = Facture::create($data);
+                }
+
+
+                    if ($request['destination_service_id']) {
+
+
+                        $fifo = FileAttente::all();
+                        $service =  Auth::guard('api')->user()->service->last();
+                        $workflow = workflow::where('source_service_id',$service->id)->first();
+                        $fileA['dossier_id'] = $dossier->id;
+                        $fileA['num_ordre'] =  count($fifo)+1;
+                        $fileA['service_id'] = $request['destination_service_id'];
+                        $fileA['status'] = 'en attente';
+                        $fileA = FileAttente::create($fileA);
+                    }
+
+
+
 
            if ($status) {
                 return response()->json([
-                    'state'=> 'true',
+                    'state'=> true,
+                    'data'=>$dossier
                 ]);
             }else{
                 return response()->json([
-                    'state'=> 'false',
+                    'state'=> false,
+
                 ]);
             }
     }
@@ -157,11 +207,11 @@ class ClientController extends Controller
 
         if ($status) {
             return response()->json([
-                'state'=> 'true',
+                'state'=> true,
             ]);
         }else{
             return response()->json([
-                'state'=> 'false',
+                'state'=> false,
             ]);
         }
     }

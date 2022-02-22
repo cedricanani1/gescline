@@ -16,7 +16,6 @@ class DepartementController extends Controller
          $request->validate([
             'nom' => 'String|required',
             'description' => 'String|nullable',
-
         ]);
 
         $nom = ucwords($request->nom) ;

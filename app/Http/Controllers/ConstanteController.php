@@ -16,18 +16,22 @@ class ConstanteController extends Controller
     {
         $request->validate([
             'libelle' => 'string|required',
+            'type' => 'string|required',
         ]);
             $data['libelle'] = $request['libelle'];
+            $data['type'] = $request['type'];
+            $data['required'] = $request['required'];
+            $data['description'] = $request['description'];
 
             $status = Constante::create($data);
 
             if ($status) {
                 return response()->json([
-                    'state'=> 'true',
+                    'state'=> true,
                 ]);
             }else{
                 return response()->json([
-                    'state'=> 'false',
+                    'state'=> false,
                 ]);
             }
 
@@ -44,17 +48,20 @@ class ConstanteController extends Controller
 
         ]);
         $data['libelle'] = $request['libelle'];
+        $data['type'] = $request['type'];
+        $data['required'] = $request['required'];
+        $data['description'] = $request['description'];
 
         $Constante = Constante::findOrFail($id);
         $status = $Constante->fill($data)->save();
 
         if ($status) {
             return response()->json([
-                'state'=> 'true',
+                'state'=> true,
             ]);
         }else{
             return response()->json([
-                'state'=> 'false',
+                'state'=> false,
             ]);
         }
     }
@@ -65,7 +72,7 @@ class ConstanteController extends Controller
         $Constante->delete();
 
         return response()->json([
-            'state'=> 'true',
+            'state'=> true,
         ]);
     }
 }

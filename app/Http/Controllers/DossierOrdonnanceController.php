@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DossierOrdonnance;
+use App\Models\Medicament;
 use App\Models\OrdonnanceMedicament;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,28 +19,48 @@ class DossierOrdonnanceController extends Controller
     {
         $created_by = Auth::guard('api')->user()->id;
         $request->validate([
-            'medicaments' => 'array|required',
+            'ordonnances' => 'array|required',
         ]);
             $num= mt_rand(0000000, 1000000000);
-
+            $ordo['dossier_id'] = $request['dossier_id'];
             $ordo['num'] = $num ;
             $ordo['created_by'] = $created_by;
             $ordo = DossierOrdonnance::create($ordo);
-            foreach ($request['medicaments'] as  $value) {
-                $data['medicament_id'] = $value['medicament_id'];
-                $data['ordonnance_id'] = $ordo->id;
-                $data['quantity'] = $value['quantity'];
-                $data['posologie'] = $value['posologie'];
+            foreach ($request['ordonnances'] as  $value) {
+                if (strlen($value['medicament_id']) > 0) {
+                    $medicament = Medicament::findOrFail($value['medicament_id']);
+                    if ($medicament) {
+                        $data['medicament_id'] = $value['medicament_id'];
+                        $data['ordonnance_id'] = $ordo->id;
+                        $data['quantity'] = $value['quantite'];
+                        $data['posologie'] = $value['posologie'];
+                        $status = OrdonnanceMedicament::create($data);
+                    }else{
+                        return response()->json([
+                            'state'=> 'false',
+                            'message'=> 'Ce Medimament n`\existe pas',
+                        ]);
+                    }
+
+                }else{
+                        $data['medicament_name'] = $value['medicament'];
+                        $data['ordonnance_id'] = $ordo->id;
+                        $data['quantity'] = $value['quantite'];
+                        $data['posologie'] = $value['posologie'];
+                        $status = OrdonnanceMedicament::create($data);
+                }
+
+
             }
 
-            $status = OrdonnanceMedicament::create($data);
+            // $status = OrdonnanceMedicament::create($data);
             if ($status) {
                 return response()->json([
-                    'state'=> 'true',
+                    'state'=> true,
                 ]);
             }else{
                 return response()->json([
-                    'state'=> 'false',
+                    'state'=> false,
                 ]);
             }
 
@@ -75,6 +96,29 @@ class DossierOrdonnanceController extends Controller
         }else{
             return response()->json([
                 'state'=> 'false',
+            ]);
+        }
+    }
+
+    public function caisse(Request $request)
+    {
+        $created_by = Auth::guard('api')->user()->id;
+        $request->validate([
+            'ordonnance_id' => 'integer|required',
+            'medicament_id' => 'integer|required',
+        ]);
+            $DossierExamen = OrdonnanceMedicament::where('ordonnance_id',$request['ordonnance_id'])->where('medicament_id',$request['medicament_id'])->first();
+
+            $DossierExamen->purchased = $request['purchased'];
+            $status = $DossierExamen->save();
+
+        if ($status) {
+            return response()->json([
+                'state'=> true,
+            ]);
+        }else{
+            return response()->json([
+                'state'=> false,
             ]);
         }
     }

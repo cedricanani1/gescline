@@ -55,4 +55,9 @@ class User extends Authenticatable
         return $this->belongsToMany(Profile::class,ProfileUser::class,'user_id','profile_id')->withPivot('statut','id');
     }
 
+    public function service()
+    {
+        return $this->belongsToMany(Service::class,'lieu_de_travails','user_id','service_id');
+    }
+
 }

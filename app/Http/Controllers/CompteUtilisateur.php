@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Lieu_de_travail;
 use App\Models\Profile;
 use App\Models\ProfileUser;
+use App\Models\WorkTime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\sendUserCompteInfo;
@@ -16,21 +17,33 @@ use Carbon\Carbon;
 class CompteUtilisateur extends Controller
 {
     //
+
     public function connexion(Request $request){
+
         $loginData = $request->validate([
             'email' => 'email|required',
             'password' => 'required'
         ]);
 
         //return response()->json(['message' => "Votre compte est fermé, veuillez contacter l'administrateur."]);
+        $credentials = [
+            'email' => $request['email'],
+            'password' => $request['password'],
+        ];
+        if (Auth::attempt($credentials)) {
 
-        if (Auth::attempt($loginData)) {
             $user = Auth::user();
             //return $user;
             if ($user->statut == "actif") {
                 # code...
                 $token = $user->createToken('authToken')->accessToken;
                 //$droits = Droits::getUserDroit($user->id);
+                $created_by = $user->id;
+                $work['user_id'] = $created_by;
+                $work['start_hour'] = Carbon::now()->format('H:i');
+                $work['label'] = 'connecté';
+                WorkTime::create($work);
+
                 return response()->json([
                     'state' => true,
                     'token' => $token,
@@ -54,7 +67,7 @@ class CompteUtilisateur extends Controller
         Auth::guard('api')->user();
 
        // $utilisateurs = User::where('statut','actif')->get();
-       $utilisateurs = User::all();
+       $utilisateurs = User::with('profile')->get();
 
         if(!$utilisateurs->isEmpty()){
             return response()->json([
@@ -71,7 +84,7 @@ class CompteUtilisateur extends Controller
     public function utilisateur($id){
         Auth::guard('api')->user();
 
-        $utilisateur = User::with('permissions','profile')->where('statut','actif')
+        $utilisateur = User::with('permissions','profile','service')->where('statut','actif')
                             ->where('id',$id)
                             ->first();
 
@@ -127,7 +140,7 @@ class CompteUtilisateur extends Controller
         $departement_id = $request->departement_id;
         $service_id = $request->service_id;
 
-        $profile = Profile::findOrFail($request->profile_id);
+
 
         $utilisateur = new User();
 
@@ -145,12 +158,18 @@ class CompteUtilisateur extends Controller
 
         $enregistrement = $utilisateur->save();
 
-        if ($profile) {
-            # code...
-            $userProfile = new ProfileUser();
-            $userProfile->profile_id = $profile->id;
-            $userProfile->user_id = $utilisateur->id;
-            $userProfile->save();
+        if (count($request->profile_id) > 0) {
+
+            foreach ($request->profile_id as $key =>  $value) {
+
+                $profile = Profile::findOrFail($value);
+                # code...
+                $userProfile = new ProfileUser();
+                $userProfile->profile_id = $profile->id;
+                $userProfile->user_id = $utilisateur->id;
+                $userProfile->save();
+            }
+
         }
 
         if($enregistrement){
@@ -209,8 +228,9 @@ class CompteUtilisateur extends Controller
     }
 
     public function modifierInformationUtilisateur(Request $request, $id){
-        Auth::guard('api')->user();
-        $utilisateur = User::findOrFail($id) ;
+            $utilisateur = User::findOrFail($id) ;
+
+            // return response()->json($utilisateur);
          $request->validate([
             'nom' => 'required',
             'prenoms' => 'required',
@@ -250,11 +270,37 @@ class CompteUtilisateur extends Controller
                     'role' => $role,
         ];
         $statut = $utilisateur->fill($data)->save();
-        if($request->profile_id){
-            $profileUser = ProfileUser::findOrFail(1);
-            $profileUser->profile_id = $request->profile_id;
-            $profileUser->save();
+        if (count($request->profile_id) > 0) {
+            $profileUsers = ProfileUser::where('user_id',$utilisateur->id)->get();
+
+            foreach ($profileUsers as  $profileUser) {
+                $profileUser->delete();
+            }
+
+            foreach ($request->profile_id as  $value) {
+
+                $profile = Profile::findOrFail($value);
+                $userProfile = new ProfileUser();
+                $userProfile->profile_id = $profile->id;
+                $userProfile->user_id = $utilisateur->id;
+                $userProfile->save();
+
+            }
+
         }
+
+            $user_id = Auth::guard('api')->user()->id;
+             $lieu_de_travail =  Lieu_de_travail::where('user_id',$id)->first();
+             if ($lieu_de_travail) {
+                $lieu_de_travail->clinique_id = $request['clinique_id'];
+                $lieu_de_travail->departement_id = $request['departement_id'];
+                $lieu_de_travail->service_id = $request['service_id'];
+
+                $lieu_de_travail->save();
+             }
+
+
+
 
         if($statut){
 
@@ -367,8 +413,15 @@ class CompteUtilisateur extends Controller
     }
 
     public function deconnexion(Request $request){
-        $token = $request->user()->token();
-        $token->revoke();
+                $created_by = $request->user()->id;
+                $work['user_id'] = $created_by;
+                $work['start_hour'] = Carbon::now()->format('H:i');
+                $work['end_hour'] = Carbon::now()->format('H:i');
+                $work['label'] = 'deconnecté';
+                WorkTime::create($work);
+
+                $token = $request->user()->token();
+                $token->revoke();
 
         return response()->json([
             'state' => true,

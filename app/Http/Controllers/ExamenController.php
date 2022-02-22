@@ -16,8 +16,7 @@ class ExamenController extends Controller
     {
         $request->validate([
             'libelle' => 'string|required',
-            'prix' => 'string|required',
-
+            'prix' => 'integer|required',
         ]);
             $data['libelle'] = $request['libelle'];
             $data['prix']=$request['prix'];
@@ -44,7 +43,7 @@ class ExamenController extends Controller
     {
         $request->validate([
             'libelle' => 'string|required',
-            'prix' => 'string|required',
+            'prix' => 'integer|required',
 
         ]);
 
@@ -56,11 +55,11 @@ class ExamenController extends Controller
 
         if ($status) {
             return response()->json([
-                'state'=> 'true',
+                'state'=> true,
             ]);
         }else{
             return response()->json([
-                'state'=> 'false',
+                'state'=> false,
             ]);
         }
     }
@@ -69,9 +68,15 @@ class ExamenController extends Controller
         $Examen = Examen::find($id);
 
         $Examen->delete();
+        if ($Examen) {
+            return response()->json([
+                'state'=> 'true',
+            ]);
+        } else {
+            return response()->json([
+                'state'=> 'falsed',
+            ]);
+        }
 
-        return response()->json([
-            'state'=> 'true',
-        ]);
     }
 }

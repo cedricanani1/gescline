@@ -69,6 +69,16 @@ class WorkflowController extends Controller
             'message' => 'Opération éffectuée']);
     }
 
+    public function getWorkflowService(){
+        $service =  Auth::guard('api')->user()->service->last();
+        $workflow = workflow::with('service')->where('source_service_id',$service->id)->get();
+
+        return response()->json([
+            'state'=> true,
+            'data' => $workflow
+        ]);
+    }
+
     public function deleteWorkflow(Request $request)
     {
         Auth::guard('api')->user();

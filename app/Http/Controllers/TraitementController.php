@@ -23,11 +23,11 @@ class TraitementController extends Controller
 
             if ($status) {
                 return response()->json([
-                    'state'=> 'true',
+                    'state'=> true,
                 ]);
             }else{
                 return response()->json([
-                    'state'=> 'false',
+                    'state'=> false,
                 ]);
             }
 
@@ -50,11 +50,11 @@ class TraitementController extends Controller
 
         if ($status) {
             return response()->json([
-                'state'=> 'true',
+                'state'=> true,
             ]);
         }else{
             return response()->json([
-                'state'=> 'false',
+                'state'=> false,
             ]);
         }
     }
@@ -65,7 +65,7 @@ class TraitementController extends Controller
         $Traitement->delete();
 
         return response()->json([
-            'state'=> 'true',
+            'state'=> true,
         ]);
     }
 }
